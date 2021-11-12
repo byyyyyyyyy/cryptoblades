@@ -60,7 +60,7 @@
           <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6 order-xs-first order-sm-first boss-col">
             <div class="boss-box">
               <div class="raid-title">
-                <span class="title mr-3"> {{ bossName }} </span>
+                <span class="title mr-3"> #{{ raidIndex }} {{ bossName }} </span>
                 <span :class="traitNumberToName(bossTrait).toLowerCase() + '-icon trait-icon'" />
               </div>
               <div class="img-responsive boss-img">
@@ -123,7 +123,8 @@
             stamina </span>,
             <span class="badge badge-secondary">{{ durabilityCost }}
             durability </span> and
-            <span class="badge badge-secondary"><CurrencyConverter :skill="convertWeiToSkill(joinCost)" :skillMinDecimals="0" :skillMaxDecimals="5"/></span>
+            <span class="badge badge-secondary"><CurrencyConverter :skill="convertWeiToSkill(joinCost)" minDecimals="0"
+                                                                   maxDecimals="5"/></span>
           </div>
         </div>
       </div>
@@ -244,23 +245,33 @@ interface RaidMappedGetters {
 let interval: number;
 
 const dragonNames = [
-  'Fudbringer',
-  'HODL Lord',
-  'Skill Eater',
-  'Chain Congester',
-  'Swap Guardian',
-  'Blade Hoarder',
-  'Centralizer',
-  'Exchange Tormentor',
-  'Eater of Stakes'
+  // 'Fudbringer',
+  // 'HODL Lord',
+  // 'Skill Eater',
+  // 'Chain Congester',
+  // 'Swap Guardian',
+  // 'Blade Hoarder',
+  // 'Centralizer',
+  // 'Exchange Tormentor',
+  // 'Eater of Stakes',
+  'M13',
+  'Ste1n',
+  'Moneth',
+  'Skulpin',
+  'Plitszkin',
 ];
 
 const bossImages = [
-  '../assets/CB_Hellborn Brute.gif',
-  '../assets/CB_Hellborn Executioner.gif',
-  '../assets/CB_Hellborn Marauder.gif',
-  '../assets/CB_Hellborn Overlord.gif',
-  '../assets/CB_Hellborn Shaman.gif',
+  // '../assets/CB_Hellborn Brute.gif',
+  // '../assets/CB_Hellborn Executioner.gif',
+  // '../assets/CB_Hellborn Marauder.gif',
+  // '../assets/CB_Hellborn Overlord.gif',
+  // '../assets/CB_Hellborn Shaman.gif',
+  '../assets/CB_Hellborn M13.gif',
+  '../assets/CB_Hellborn Ste1n.gif',
+  '../assets/CB_Hellborn Moneth.gif',
+  '../assets/CB_Hellborn Skulpin.gif',
+  '../assets/CB_Hellborn Plitszkin.gif',
 ];
 
 export default Vue.extend({

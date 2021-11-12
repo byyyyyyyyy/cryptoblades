@@ -14,6 +14,8 @@ import { abi as charactersAbi } from '../../build/contracts/Characters.json';
 import { abi as weaponsAbi } from '../../build/contracts/Weapons.json';
 import { abi as blacksmithAbi } from '../../build/contracts/Blacksmith.json';
 import { abi as shieldsAbi } from '../../build/contracts/Shields.json';
+import { abi as cbkLandSaleAbi } from '../../build/contracts/CBKLandSale.json';
+import { abi as cbkLandAbi } from '../../build/contracts/CBKLand.json';
 import { abi as weaponRenameTagConsumablesAbi } from '../../build/contracts/WeaponRenameTagConsumables.json';
 import { abi as characterRenameTagConsumablesAbi } from '../../build/contracts/CharacterRenameTagConsumables.json';
 import { abi as characterFireTraitChangeConsumablesAbi } from '../../build/contracts/CharacterFireTraitChangeConsumables.json';
@@ -26,7 +28,11 @@ import { abi as junkAbi } from '../../build/contracts/Junk.json';
 import { abi as randomsAbi } from '../../build/contracts/IRandoms.json';
 import { abi as marketAbi, networks as marketNetworks } from '../../build/contracts/NFTMarket.json';
 import { abi as waxBridgeAbi, networks as waxBridgeNetworks } from '../../build/contracts/WaxBridge.json';
+import { abi as weaponCosmeticsAbi } from '../../build/contracts/WeaponCosmetics.json';
+import { abi as characterCosmeticsAbi } from '../../build/contracts/CharacterCosmetics.json';
+import { abi as storageAbi } from '../../build/contracts/NFTStorage.json';
 import config from '../app-config.json';
+
 
 import Web3 from 'web3';
 import { Contracts, isStakeType, StakeType, StakingContracts } from './interfaces';
@@ -57,7 +63,7 @@ interface Chain {
 
 export function getConfigValue(key: string): any {
   if(process.env.NODE_ENV === 'development') return '';
-  const env = window.location.href.startsWith('test') ? 'test' : 'production';
+  const env = window.location.href.startsWith('https://test') ? 'test' : 'production';
   const chain = localStorage.getItem('currentChain') || 'BSC';
   return (config as Config).environments[env].chains[chain][key];
 }
@@ -178,7 +184,22 @@ export async function setUpContracts(web3: Web3): Promise<Contracts> {
   const CharacterLightningTraitChangeConsumables = new web3.eth.Contract(characterLightningTraitChangeConsumablesAbi as Abi,
     characterLightningTraitChangeConsumablesAddr);
 
+  const cosmeticsWeaponIndex = await Blacksmith.methods.ITEM_COSMETIC_WEAPON().call();
+  const cosmeticsWeaponAddr = await Blacksmith.methods.getAddressOfItem(cosmeticsWeaponIndex).call();
+  const WeaponCosmetics = new web3.eth.Contract(weaponCosmeticsAbi as Abi, cosmeticsWeaponAddr);
 
+  const cosmeticsCharacterIndex = await Blacksmith.methods.ITEM_COSMETIC_CHARACTER().call();
+  const cosmeticsCharacterAddr = await Blacksmith.methods.getAddressOfItem(cosmeticsCharacterIndex).call();
+  const CharacterCosmetics = new web3.eth.Contract(characterCosmeticsAbi as Abi, cosmeticsCharacterAddr);
+
+  const NFTStorageAddr = getConfigValue('VUE_APP_STORAGE_CONTRACT_ADDRESS') || process.env.VUE_APP_STORAGE_CONTRACT_ADDRESS;
+  const NFTStorage = new web3.eth.Contract(storageAbi as Abi, NFTStorageAddr);
+
+  const cbkLandSaleAddr = await Blacksmith.methods.cbkLandSale().call();
+  const CBKLandSale = new web3.eth.Contract(cbkLandSaleAbi as Abi, cbkLandSaleAddr);
+
+  const cbkLandAddr = await CBKLandSale.methods.cbkLand().call();
+  const CBKLand = new web3.eth.Contract(cbkLandAbi as Abi, cbkLandAddr);
 
   const raidContracts: RaidContracts = {};
   let raidTrinketAddress = '';
@@ -218,6 +239,8 @@ export async function setUpContracts(web3: Web3): Promise<Contracts> {
     CryptoBlades, Randoms, Characters, Weapons, Blacksmith, Shields, WeaponRenameTagConsumables, CharacterRenameTagConsumables,
     CharacterFireTraitChangeConsumables, CharacterEarthTraitChangeConsumables, CharacterWaterTraitChangeConsumables, CharacterLightningTraitChangeConsumables,
     RaidTrinket, KeyLootbox, Junk,
+    WeaponCosmetics, CharacterCosmetics,
+    NFTStorage, CBKLandSale, CBKLand,
     ...raidContracts,
     ...marketContracts,
     WaxBridge,
