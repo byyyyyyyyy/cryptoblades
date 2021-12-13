@@ -1,16 +1,30 @@
 <template>
   <div>
-    <div class="row mt-3 mb-3 justify-content-center">
-      <h3> Bridge for your NFTs - Transfer NFTs to another chain </h3>
+    <div class="row m-3 justify-content-center">
+      <h2> Bridge for your NFTs</h2>
     </div>
-    <div class="row mt-3 mb-3 justify-content-center">
+    <div class="row m-3 justify-content-center">
+      <h3>Transfer NFTs to another chain</h3>
+    </div>
+    <div class="row mt-3 justify-content-center">
       <p v-if="bridgeFee">
-        Transfer Fee: <CurrencyConverter :skill="convertWeiToSkill(bridgeFee)"/>
+        Bridge Transfer Fee: <CurrencyConverter :skill="convertWeiToSkill(bridgeFee)"/> &nbsp;
+        <b-icon-question-circle class="centered-icon" scale="0.8"
+        v-tooltip.bottom="`The fee is deducted when you request a transfer under the 'Storage' tab.`"
+        />
+      </p>
+    </div>
+    <div class="row mb-3 justify-content-center">
+      <p v-if="queueLength">
+        Queue length: <b>{{queueLength}}</b> &nbsp;
+        <b-icon-question-circle class="centered-icon" scale="0.8"
+        v-tooltip.bottom="`There are currently ${queueLength} NFTs in queue for transfer`"
+        />
       </p>
     </div>
     <b-tabs justified>
       <b-tab title="Inventory" @click="nftType = 'weapon'">
-        <div class="d-flex flex-row justify-content-center">
+        <div class="btnRow d-flex flex-row justify-content-center">
           <div class="p-2">
             <b-button variant="primary" @click="nftType = 'weapon'; selectedNftId = ''" class="gtag-link-others"
               tagname="show_weapons_bridge" :disabled="nftType === 'weapon'">
@@ -26,7 +40,7 @@
           <div class="p-2">
             <b-button :disabled="selectedNftId === ''" variant="primary"
             @click=" nftType === 'character' ? $refs['character-warning-modal'].show() :  transferToStorage()"
-              class="gtag-link-others" tagname="click_transfer_bridge">Transfer NFT to storage</b-button>
+              class="gtag-link-others" tagname="click_transfer_bridge">Move NFT to storage</b-button>
           </div>
         </div>
 
@@ -51,12 +65,12 @@
            <b-icon icon="exclamation-circle" variant="danger"/> WARNING
           </template>
           <span>
-           When transferring your character to another chain, your character will lose <b>all</b> unclaimed XP!<br>
+            When transferring your character to another chain, <b>any</b> unclaimed XP remains on this one!
           </span>
         </b-modal>
       </b-tab>
       <b-tab title="Storage" @click="showStorage(); selectedNftId = ''">
-        <div class="d-flex flex-row justify-content-center">
+        <div class="btnRow d-flex flex-row justify-content-center" v-if="loadedStorage">
           <div class="p-2">
             <b-button variant="primary" @click="nftType = 'weapon'; selectedNftId = ''; getStoredIds()"
               class="gtag-link-others" tagname="show_weapons_bridge" :disabled="nftType === 'weapon'">
@@ -70,23 +84,24 @@
             </b-button>
           </div>
           <div class="p-2">
-            <b-button :disabled="selectedNftId === '' || (currentTransferNFTId == selectedNftId && transferStatus != transferStates.restored)" variant="primary"
+            <b-button :disabled="selectedNftId === '' ||
+            (currentTransferNFTId == selectedNftId && transferStatus != transferStates.restored) ||
+            !storedNftsIds.includes(String(selectedNftId))"
+            variant="primary"
               @click="withdrawItem()" class="gtag-link-others"
-              tagname="click_transfer_bridge">Withdraw from Storage</b-button>
+              tagname="click_transfer_bridge">Withdraw from <br> Storage</b-button>
           </div>
           <div class="p-2">
             <b-button
-              :disabled="!canBridge || (transferStatus === transferStates.done || transferStatus !== transferStates.noTransfer)
-              &&(currentTransferNFTId == selectedNftId)||
-              transferStatus === transferStates.pending || transferStatus === transferStates.processing || selectedNftId === ''"
+              :disabled="!canBridge"
               variant="primary"
               @click="requestBridge()" class="gtag-link-others" tagname="click_transfer_bridge">
-                Request Transfer <span :style="canBridge ? '' : 'color:red;'"> (<CurrencyConverter :skill="convertWeiToSkill(bridgeFee)"/>) </span>
+                Request Transfer <br> <span :style="canAffordBridge ? '' : 'color:red;'"> (<CurrencyConverter :skill="convertWeiToSkill(bridgeFee)"/>) </span>
             </b-button>
           </div>
           <div class="p-2">
             <b-button :disabled="transferStatus != transferStates.pending" variant="primary" @click="$refs['refund-warning-modal'].show()"
-              class="gtag-link-others" tagname="click_transfer_bridge">Cancel Transfer Request</b-button>
+              class="gtag-link-others" tagname="click_transfer_bridge">Cancel <br> Transfer Request</b-button>
           </div>
         </div>
         <div class="d-flex flex-row bd-highlight mb-3 justify-content-center">
@@ -107,6 +122,7 @@
           </div>
           <div v-if="currentTransferNFTType == 'weapon'">
             <weapon-grid
+            class="currentTransferNFT"
             v-model="selectedNftId"
             :weaponIds="[currentTransferNFTId]"
             :showGivenWeaponIds="true"
@@ -120,6 +136,7 @@
           </div>
           <div v-if="currentTransferNFTType == 'character'">
             <character-list
+            class="currentTransferNFT"
             v-model="selectedNftId"
             :characterIds="[currentTransferNFTId]"
             :showGivenCharacterIds="true"
@@ -128,7 +145,8 @@
           </div>
           <div class="text-center">
             Status: {{transferStatus}} <br>
-            To Chain: {{currentTransferChain}}
+            To Chain: {{currentTransferChain}} <br>
+            <span v-if="transferStatus === transferStates.pending"> Your place in Queue: {{currentTransferQueuePosition}}</span><br>
           </div>
           <br>
           <div class="outcome" v-if="cancellingRequest">
@@ -140,13 +158,13 @@
         <div v-if="nftType == 'weapon' && storedNftsIds.length !== 0">
           <weapon-grid
           v-model="selectedNftId"
-          :showReforgedWeaponsDefVal="false"
-          :showFavoriteWeaponsDefVal="false"
-            :showReforgedToggle="true"
-            :showFavoriteToggle="true"
-            :canFavorite="false"
-            :weaponIds="storedNftsIds"
-            :showGivenWeaponIds="true"
+          :showReforgedWeaponsDefVal="true"
+          :showFavoriteWeaponsDefVal="true"
+          :showReforgedToggle="true"
+          :showFavoriteToggle="true"
+          :canFavorite="false"
+          :weaponIds="storedNftsIds"
+          :showGivenWeaponIds="true"
             />
         </div>
         <div v-else-if="nftType == 'weapon'">
@@ -281,6 +299,8 @@ interface StoreMappedActions {
   chainEnabled(payload: {
     chainId: string;
   }): Promise<boolean>;
+  getBridgeTransferAt(): Promise<number>;
+  getBridgeTransfers(): Promise<number>;
 }
 
 enum transferStates{
@@ -313,7 +333,7 @@ export default Vue.extend({
       ownerAddress: '',
       nftType: 'weapon',
       selectedNftId: '' as string,
-      storedNftsIds: [],
+      storedNftsIds: [] as string[],
       currentChain: '',
       targetChain: '',
       targetChainId: '',
@@ -336,6 +356,10 @@ export default Vue.extend({
       withdrawingFromBridge: false,
       enabledChains: [] as string[],
       bridgeFee: '',
+      loadedStorage: false,
+      currentTransferQueuePosition: 0,
+      queueLength: 0,
+      refreshIntervall: 0 as number,
     };
   },
 
@@ -379,9 +403,26 @@ export default Vue.extend({
           : this.Shields.options.address;
     },
     canBridge(){
+      if (!this.canAffordBridge) return false;
+
+      else if(!this.enabledChains.length) return false;
+
+      else if(!this.storedNftsIds.includes(String(this.selectedNftId))) return false;
+
+      else if(this.transferStatus === transferStates.done && this.currentTransferNFTId === String(this.selectedNftId)) return false;
+
+      else if(this.transferStatus === transferStates.pending || this.transferStatus === this.transferStates.processing) return false;
+
+      else if(this.selectedNftId === '') return false;
+
+      else return true;
+    },
+    canAffordBridge(){
       const cost = toBN(this.bridgeFee);
       const balance = toBN(this.skillBalance);
-      return balance.isGreaterThanOrEqualTo(cost);
+      const skillRewards = toBN(this.skillRewards);
+      const totalBalance = balance.plus(skillRewards);
+      return totalBalance.isGreaterThanOrEqualTo(cost);
     },
   },
   created(){
@@ -402,6 +443,11 @@ export default Vue.extend({
   async mounted(){
     if (!this.contracts.NFTStorage) return;
     this.bridgeFee = await this.contracts.NFTStorage.methods.getBridgeFee().call({ from: this.defaultAccount });
+    await this.showStorage();
+    this.refreshIntervall = window.setInterval(async () => await this.showStorage(), 5000);
+  },
+  beforeDestroy(){
+    clearInterval(this.refreshIntervall);
   },
   methods: {
     ...(mapActions([
@@ -421,6 +467,8 @@ export default Vue.extend({
       'getReceivedNFTs',
       'getReceivedNFT',
       'chainEnabled',
+      'getBridgeTransferAt',
+      'getBridgeTransfers',
     ]) as StoreMappedActions),
     convertWeiToSkill(wei: string): string {
       return fromWeiEther(wei);
@@ -460,6 +508,7 @@ export default Vue.extend({
       this.getStatus();
     },
     async withdrawBridge(tokenId: string){
+      console.log('withdrawBridge', tokenId);
       this.withdrawingFromBridge = true;
       try{
         await this.withdrawFromBridge({
@@ -496,7 +545,20 @@ export default Vue.extend({
       });
       return chainId;
     },
+    async checkQueuePosition(id: number){
+      const transferAt = await this.getBridgeTransferAt();
+      const bridgetransfers = await this.getBridgeTransfers();
+      if(this.transferStatus === transferStates.pending && bridgetransfers > transferAt) return (id - transferAt);
+      else return 0;
+    },
+    async checkQueueLength(){
+      const transferAt = await this.getBridgeTransferAt();
+      const bridgetransfers = await this.getBridgeTransfers();
+      this.queueLength = bridgetransfers - transferAt;
+      if(this.queueLength < 0) this.queueLength = 0;
+    },
     async getStatus(){
+      await this.checkQueueLength();
       const id = await this.getBridgeTransferId();
       const transfer= await this.getBridgeTransfer({
         transferId: id,
@@ -521,7 +583,7 @@ export default Vue.extend({
       else if(transfer[6] === '5'){
         this.transferStatus = transferStates.restored;
       }
-
+      this.currentTransferQueuePosition = await this.checkQueuePosition(parseInt(id,10));
       const currentTransferTokenAddress = transfer[1];
       this.currentTransferNFTId = transfer[2];
       const currentTransferChainId = transfer[5];
@@ -566,6 +628,7 @@ export default Vue.extend({
       }
       await this.getStoredIds();
       await this.getStatus();
+      this.loadedStorage = true;
     },
   },
   components: {
@@ -577,92 +640,31 @@ export default Vue.extend({
 </script>
 
 <style scoped>
+.btnRow{
+  flex-wrap: wrap;
+}
+.btn{
+  width: 150px;
+  line-height: 1.25em;
+  height: 4em;
+  white-space:nowrap;
+}
 .outcome {
   margin: 20px auto;
   text-align: center;
   font-size: 1em;
 }
-.character-list {
-  transform: scale(1.5);
+/deep/ .character-list{
+  justify-content: center;
+}
+/deep/ .weapon-grid{
+  grid-template-columns: repeat(auto-fit,12em);
+	box-shadow: 0 0 0 0 rgba(0, 0, 0, 1);
+	transform: scale(1);
 }
 
-.nft-list,
-.weapon-grid {
-  transform: scale(2);
-}
+@media screen and (min-width: 768px) {
 
-/deep/ .weapon-grid {
-  justify-items: center;
-}
-
-.search-button {
-  width: 100%;
-}
-
-.search-input-id,
-.search-input-type {
-  margin-top: 5px;
-  width: 22em;
-}
-
-.copy-url-button,
-.search-button {
-  margin-top: 30px;
-}
-
-.nft-display {
-  height: auto;
-}
-
-.search-result-section {
-  padding-top: 100px;
-}
-
-.search-section {
-  border-right: 1px solid #9e8a57;
-}
-
-.result-row-section,
-.search-row-section {
-  flex-direction: column;
-  align-content: center;
-}
-
-.result-row-section {
-  align-items: center;
-}
-
-.owned-by,
-.info-text {
-  text-align: center;
-}
-
-.owned-by {
-  margin-top: 150px;
-  word-break: break-all;
-  padding-left: 20px;
-  padding-right: 20px;
-}
-
-.search-input-section {
-  display: flex;
-  justify-content: space-evenly;
-}
-
-.m-top-negative-5 {
-  margin-top: -5px;
-}
-
-.disabled-button {
-  opacity: 0.65;
-}
-
-@media (max-width: 576px) {
-  .nft-list,
-  .weapon-grid,
-  .character-list {
-    transform: scale(1);
-  }
 }
 
 </style>
