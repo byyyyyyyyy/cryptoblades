@@ -33,32 +33,27 @@
         </div>
         <div class="seperator"></div>
         <div class="instructions-list">
-          <p>{{ $t('app.warning.message.instructions', {recruitCost: this.recruitCost}) }}</p>
+          <p>{{ $t('app.warning.message.' + currentChain + '.instructions', {recruitCost: this.recruitCost}) }}</p>
           <ul class="unstyled-list">
             <li>
-              1. {{ $t('app.warning.message.inst1') }}
-              <a href="https://youtu.be/6-sUDUE2RPA" target="_blank" rel="noopener noreferrer">{{$t('app.warning.message.watchVideo')}}</a>
-              {{$t('app.warning.message.or')}}
-              <a :href="getExchangeTransakUrl()" target="_blank" rel="noopener noreferrer">{{$t('app.warning.message.buyWithTransak')}}</a>
+              <span v-html="$t('app.warning.message.' + currentChain + '.inst1', {link1: getExchangeTransakUrl()})"></span>
             </li>
             <li>
-              2. {{ $t('app.warning.message.inst2') }}<br />
-              <a v-bind:href="`${getExchangeUrl}`" target="_blank">{{ $t('trade') }} SKILL/BNB</a>
+              <span v-html="$t('app.warning.message.' + currentChain + '.inst2', {link1: getExchangeUrl})"></span>
             </li>
             <li>
-              3. {{ $t('app.warning.message.inst3') }} <a href="https://youtu.be/_zitrvJ7Hl4" target="_blank" rel="noopener noreferrer">{{ $t('app.warning.message.watchVideo', {name:''}) }}</a>
+              <span v-html="$t('app.warning.message.' + currentChain + '.inst3')"></span>
             </li>
             <li>
-              4. {{ $t('app.warning.message.inst4') }} (<a href="https://youtu.be/ZcNq0jCa28c" target="_blank" rel="noopener noreferrer">{{ $t('app.warning.message.watchGettingStartedVideo', {name:"'Getting Started' "}) }}</a>)
+              <span v-html="$t('app.warning.message.' + currentChain + '.inst4')"></span>
             </li>
           </ul>
           <p>
-            {{ $t('app.warning.message.questionDiscord') }}
-            <a href="https://discord.gg/cryptoblades" target="_blank" rel="noopener noreferrer">https://discord.gg/cryptoblades</a>
+            {{ $t('app.warning.message.happyEarning') }}
           </p>
         </div>
         <div class="seperator"></div>
-        <small-button class="button" @click="toggleHideWalletWarning" :text="$t('app.warning.buttons.hide')" />
+        <small-button class="button mm-button" @click="toggleHideWalletWarning" :text="$t('app.warning.buttons.hide')" />
       </div>
       <div class="ad-container">
         <Adsense v-if="showAds && !isMobile()"
@@ -75,7 +70,7 @@
 <script>
 import BN from 'bignumber.js';
 
-import { mapState, mapActions, mapGetters } from 'vuex';
+import {mapState, mapActions, mapGetters, mapMutations} from 'vuex';
 import _ from 'lodash';
 import Vue from 'vue';
 import Events from './events';
@@ -88,6 +83,8 @@ import { apiUrl } from './utils/common';
 import i18n from './i18n';
 import { getConfigValue } from './contracts';
 import '@/mixins/general';
+import config from '../app-config.json';
+import { addChainToRouter } from '@/utils/common';
 
 Vue.directive('visible', (el, bind) => {
   el.style.visibility = bind.value ? 'visible' : 'hidden';
@@ -127,6 +124,9 @@ export default {
     showNetworkError() {
       return this.expectedNetworkId && this.currentNetworkId !== null && this.currentNetworkId !== this.expectedNetworkId;
     },
+    currentChain(){
+      return localStorage.getItem('currentChain');
+    }
   },
 
   watch: {
@@ -139,6 +139,7 @@ export default {
     },
     $route(to) {
       // react to route changes
+      this.checkChainAndParams();
       if(to.path === '/options') {
         return this.isOptions = true;
       } else this.isOptions = false;
@@ -166,7 +167,31 @@ export default {
     ...mapGetters([
       'getExchangeTransakUrl'
     ]),
+    ...mapMutations(['updateCurrentChainSupportsMerchandise', 'updateCurrentChainSupportsPvP']),
+    async checkChainAndParams(){
+      const currentChain = localStorage.getItem('currentChain') || 'BSC';
+      const paramChain = this.$router.currentRoute.query.chain;
+      const supportedChains = config.supportedChains;
 
+      if(!paramChain){
+        localStorage.setItem('currentChain', currentChain);
+        addChainToRouter(currentChain);
+      }
+
+      //add chain as query param if chain unchanged
+      if(currentChain === paramChain || !paramChain){
+        localStorage.setItem('currentChain', currentChain);
+        addChainToRouter(currentChain);
+      }
+
+      //set chain in localStorage & MM from query param; check if supported
+      else if (currentChain !== paramChain && supportedChains.includes(paramChain)){
+        localStorage.setItem('currentChain', paramChain);
+        await this.configureMetaMask(+getConfigValue('VUE_APP_NETWORK_ID'));
+      }
+      this.updateCurrentChainSupportsMerchandise();
+      this.updateCurrentChainSupportsPvP();
+    },
     async updateCharacterStamina(id) {
       if (this.featureFlagStakeOnly) return;
 
@@ -312,6 +337,7 @@ export default {
   },
 
   async created() {
+    this.checkChainAndParams();
     try {
       await this.initializeStore();
     } catch (e) {
@@ -386,6 +412,7 @@ button.btn.button.main-font.dark-bg-text.encounter-button.btn-styled.btn-primary
   font-weight: 600;
   text-align: center;
 }
+
 hr.hr-divider {
   border-top: 1px solid #9e8a57;
   margin-bottom: 0.5rem !important;
@@ -467,6 +494,11 @@ button,
   color: yellow;
 }
 
+.summary-text {
+  font-size: 0.8em;
+  color: grey;
+}
+
 .fire-icon,
 .str-icon {
   color: red;
@@ -515,10 +547,12 @@ button.close {
   color: #9e8a57 !important;
 }
 
-.mm-button {
+.mm-button{
   margin: 5px;
-  margin-left: 5px;
-  margin-right: 5px;
+  font-size: clamp(24px, 2vw, 40px);
+}
+.mm-button > h1 {
+   font-size: clamp(24px, 2vw, 40px);
 }
 
 .btn {
@@ -666,7 +700,7 @@ div.bg-success {
 
 .starter-panel-heading {
   margin-left: 15px;
-  font-size: 45px;
+  font-size: clamp(18px, 2vw, 45px);
 }
 
 .starter-msg {
@@ -675,11 +709,12 @@ div.bg-success {
 .instructions-list {
   text-align: start;
   padding: 15px;
-  font-size: 0.5em;
+  font-size: clamp(18px, 2vw, 24px);
 }
 
 .unstyled-list {
   list-style-type: none;
+  padding-left: clamp(10px,2vw,40px);
 }
 .seperator {
   border: 1px solid #9e8a57;
@@ -688,8 +723,7 @@ div.bg-success {
 }
 
 .mini-icon-starter {
-  height: 1.2em;
-  width: 1.2em;
+  width: clamp(50px, 4vw, 100px);
   margin: 5px;
 }
 

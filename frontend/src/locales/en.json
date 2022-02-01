@@ -5,9 +5,12 @@
     "blacksmith": "Blacksmith",
     "combat": "Combat",
     "raid": "Raid",
-    "pvp": "PvP",
     "market": "Market",
-    "stake": "Stake"
+    "stake": "Stake",
+    "pvp": "PvP",
+    "treasury": "Treasury",
+    "merchandise": "Merchandise",
+    "functionalityNotSupportedTooltip": "Currently selected chain does not support this functionality."
   },
   "ClaimRewardsBar": {
     "rewards": "Rewards",
@@ -24,7 +27,9 @@
     "partnerTokenClaimed": "This partner tokens have been claimed already.",
     "slippage": "Slippage",
     "skillAmount": "Skill Amount",
-    "multiplierAtZero": "Multiplier is at x0, try again later..."
+    "multiplierAtZero": "Multiplier is at x0, try again later...",
+    "lowMultiplier": "Current multiplier is low, you will receive only {currentMultiplier} of claimed tokens.",
+    "realWithdrawValueClaimable": "Currently you'll receive approximately {actualAmount} {tokenSymbol} for withdrawing {skillAmount} SKILL."
   },
   "CharacterDisplay": {
     "loading": "Loading...",
@@ -39,7 +44,8 @@
     "scoreTooltip": "Hero score is a measure of your hero's combat prowess so far. It goes up when you win and down when you lose. It is also temporarily disabled!",
     "staminaShort": "STA",
     "xp": "XP",
-    "id": "ID"
+    "id": "ID",
+    "powerTooltip": "BASE: {basePower} PWR<br>BONUS: {bonusPower}/{maxPower} PWR<br>Bonus power cap (3x base power) scales with level"
   },
   "combatResults": {
     "won": "You won the fight!",
@@ -89,15 +95,34 @@
     "plaza": "Plaza",
     "plazaHint": "Your active characters are in Plaza.",
     "garrison": "Garrison",
-    "garrisonHint": "Your idle characters are in Garrison. While in Garrison they cannot fight."
+    "garrisonHint": "Your idle characters are in Garrison. While in Garrison they cannot fight.",
+    "burn": "Burn",
+    "upgrade": "Upgrade",
+    "selectBurnCharacter": "Select characters you wish to burn",
+    "cancelBurning": "Cancel Burning",
+    "burnInto": "Burn into",
+    "clearTargetCharacterId": "Clear Target Character",
+    "burnSelected": "Burn selected characters",
+    "upgradeSelected": "Upgrade selected character",
+    "charactersToBurn": "Characters to burn",
+    "soul": "Soul",
+    "burnWarning": "Please confirm you want to burn {characterAmount} selected character(s).",
+    "noRefunds": "No refunds will be given for accidentally burned items!",
+    "cantBeUndone": "This process cannot be undone!",
+    "burnConfirmation": "Characters Burn Confirmation",
+    "upgradeConfirmation": "Characters Upgrade Confirmation",
+    "upgradeConfirm": "Are you sure you want to upgrade this character using",
+    "characterToUpgrade": "Character to upgrade",
+    "selectSoulAmount": "Select amount of Soul you want to use to upgrade selected character!",
+    "busyInArena": "Character is currently busy in Arena!",
+    "claimXp": "Claim XP",
+    "noXpToClaim": "No XP to claim"
   },
   "bridge": {
     "bridgeForYourNfts": "Bridge for your NFTs",
     "transferNftsToAnotherChain": "Transfer NFTs to another chain",
     "bridgeTransferFee": "Bridge Transfer Fee",
     "bridgeTransferFeeTooltip": "The fee is deducted when you request a transfer under the 'Storage' tab.",
-    "queueLength": "Queue Length",
-    "queueLengthTooltip": "There are currently {queueLength} NFTs in queue for transfer",
     "inventory": "Inventory",
     "showWeapons": "Show Weapons",
     "showCharacters": "Show Characters",
@@ -115,7 +140,6 @@
     "currentTransfer": "Current Transfer",
     "status": "Status",
     "toChain": "To Chain",
-    "yourPlaceInQueue": "Your place in Queue",
     "noWeaponsStored": "No Weapons stored!",
     "noCharactersStored": "No Characters stored!",
     "noRefundOfSpentSkill": "You will not get a refund of your spent SKILL fee when cancelling the transfer!",
@@ -176,7 +200,8 @@
     "renamePlaceholder": "New Name",
     "isProfanish": "This name contains profanish words and thus will be displayed as follows:",
     "changeWeaponSkill": "Change Weapon's Skin",
-    "pickSkin": "Pick a skin to switch to."
+    "pickSkin": "Pick a skin to switch to.",
+    "average": "AVG"
   },
   "weaponIcon": {
     "durability": "Durability:",
@@ -404,6 +429,10 @@
     "skillShophint": "You can buy various goods in here",
     "specials": "Specials",
     "shop": "Shop",
+    "purchaseAndBurn": "Purchase and burn",
+    "characterBuyModal": "Character Buy Confirmation",
+    "characterBuyBurnModal": "Character Buy/Burn Confirmation",
+    "purchase": "Purchase",
     "nftList": {
       "characterRenameTag": "Rename Tag",
       "characterRenameTagDesc": "Renames one character.",
@@ -511,6 +540,7 @@
       "addressLine2": "Address line 2 (Optional)",
       "city": "City",
       "zipCode": "Zip code",
+      "taxNumber": "Tax number (CPF number)",
       "companyOptional": "Company (optional)",
       "shipping": "Shipping",
       "shippingCostAfterNextStep": "Shipping cost will be known after the next step",
@@ -574,6 +604,10 @@
       "rewardsDuration": "Distribution",
       "warning": "Warning",
       "select": "Select",
+      "rewardsAvailableTooltip":"You can earn rewards in this stake pool.",
+      "rewardsDepletedTooltip":"Rewards depleted.",
+      "rewardsAvailableEarnedTooltip":"You have rewards ready to claim in this stake pool and you can still earn more.",
+      "rewardsDepletedEarnedTooltip":"Rewards depleted but you can claim your reward.",
       "deprecatedTooltip": "This stake pool has been deprecated, and should not be staked in anymore. You can still pull tokens out or stake at your own risk, but it is not recommended, and it cannot be reversed."
     },
     "tier": "Tier",
@@ -688,6 +722,79 @@
       "highToLow": "Price: High -> Low"
     }
   },
+  "pvp": {
+    "lastDefeated": "You were last defeated by: ",
+    "tapAnywhere": "Tap anywhere to close",
+    "kicked": "You were kicked from the arena!",
+    "atLeastOneChar": "You need at least one character to enter PvP!",
+    "arenaSignUp": "Arena Signup",
+    "enterAndWin": "Enter the arena and win rewards ",
+    "equipSwordAndShield": "Equip a Sword and a Shield (optional).",
+    "weapons": "Weapons",
+    "noWeapons": "You have no weapons.",
+    "clear": "Clear",
+    "shields": "Shields",
+    "noShields": "You have no shields.",
+    "enterTheArena": "Enter the Arena",
+    "enterArenaWillCost": " Entering the Arena will cost you {formattedEntryWager} $SKILL.",
+    "playersCanAttackYou": " Players can attack you while you are in the Arena.",
+    "leavingWillCost": " Leaving the Arena will cost you {leavingArenaCost} $SKILL.",
+    "iUnderstand": "I understand.",
+    "enterArena": "Enter Arena",
+    "equipment": "Equipment",
+    "duelHistory": "Duel history",
+    "date": "Date",
+    "result": "Result",
+    "win": "Win",
+    "lose": "Lose",
+    "arena": "Arena",
+    "arenaTier": "Arena tier:",
+    "wagerLeft": "Wager left:",
+    "level": "Level",
+    "rank": "Rank",
+    "youHave": "You have ",
+    "toAcceptDuel": " to accept the duel",
+    "duelHasExpired": "Duel has expired.",
+    "inProgress": "In Progress",
+    "findMatch": "Find Match",
+    "duel": "Duel",
+    "reRoll": "Re-roll Opponent",
+    "leaveArena": "Leave Arena",
+    "pressFindMatch": "Press FIND MATCH to find an opponent!",
+    "wonDuel": "You have won the duel!",
+    "lostDuel": "You have lost the duel!",
+    "youRolled": "You rolled",
+    "opponentRolled": "Opponent rolled",
+    "youEarned": "You earned: {skillEarned} $SKILL",
+    "youLost": "You lost: {skillEarned} $SKILL",
+    "updatedRank": "Updated ranking points: ",
+    "weaponStats": "Weapon stats",
+    "shieldStats": "Shield stats",
+    "arenaInformation": "Arena Information",
+    "rewardsPool": "PVP Rewards Pool ",
+    "topPlayers": "Top Players",
+    "currentSeason": "Current Season",
+    "restartsIn": "Restarts In",
+    "days": "days",
+    "power": "Power",
+    "currentRank": "Ranking points",
+    "clickToClaim": "Here you can claim your rewards",
+    "seasonRewardDistribution": "Seasonal rewards are distributed at the end of every ranked season to the top 3 ranking players in each tier.",
+    "rewardsAccumulate": "Your rewards will accumulate over time.",
+    "justClickClaim": "Just click 'CLAIM REWARDS' to claim your skill!",
+    "yourAvailableSkill": "Your available skill: {formattedAvailableSkill} ",
+    "claimRewards": "Claim Rewards",
+    "leaderboard": "Arena Leaderboard",
+    "rewards": "Rewards",
+    "currentlyUnderAttack": "You are currently under attack!",
+    "pleaseWait": "Please wait a moment",
+    "name": "Name",
+    "rankingPoints": "Ranking points",
+    "attackerPower": "Your Power:",
+    "opponentPower": "Opponent Power:",
+    "mmr": "Mmr",
+    "tier": "Tier"
+  },
   "app": {
     "cantView": "You can't currently view the app right now. You can try clearing LocalStorage to reset your settings.",
     "warning": {
@@ -704,20 +811,46 @@
         "connecting": "Connecting to MetaMask...",
         "success": "Success: MetaMask connected.",
         "error": "Error: MetaMask could not get permissions.",
-        "welcome": "Welcome to CryptoBlades. Here is how you can get started."
+        "welcome": "Get started With CryptoBlades"
       },
       "message": {
+        "BSC":{
+          "instructions": "Get started in no time! To recruit your first character you need {recruitCost} SKILL and .0015 BNB for gas. You will also need a litle bit of BNB for gas to cover your first few battles, but don't worry, you will profit with rewards immediately!",
+          "inst1": "1. Buying BNB with fiat: <a target=_blank href=https://youtu.be/6-sUDUE2RPA> Watch Video </a> or <a target=_blank href={link1}> Buy with Transak</a>",
+          "inst2": "2. Once you have BNB, go to ApeSwap to obtain SKILL tokens: <a target=_blank href={link1}> Trade SKILL/BNB </a>",
+          "inst3": "3. Follow this tutorial to swap BNB for SKILL: <a target=_blank href=https://youtu.be/_zitrvJ7Hl4> Watch Video </a>",
+          "inst4": "4. That's it! If you have any questions, please join our Discord: <a target=_blank href=https://discord.gg/cryptoblades> Join Discord </a>"
+        },
+        "HECO":{
+          "instructions": "Get started in no time! To recruit your first character you need {recruitCost} SKILL and .0007 HT for gas. You will also need a litle bit of HT for gas to cover your first few battles, but don't worry, you will profit with rewards immediately!",
+          "inst1": "1. Swap BNB to HT <a target=_blank href=https://bridge.butterswap.me> here </a> (min. $30USD worth of BNB)",
+          "inst2": "2. Once you have HT, go to <a target=_blank href=https://swap.butterswap.me/swap> ButterSwap </a> to swap HT for SKILL tokens",
+          "inst3": "3. If you need to bridge NFTs to or from other networks, use our bridge: <a target=_blank href=https://www.youtube.com/watch?v=eNqh7b7hJwE&t=66s> Watch Video </a>",
+          "inst4": "4. That's it! If you have any questions, please join our Discord: <a target=_blank href=https://discord.gg/cryptoblades> Join Discord </a>"
+        },
+        "OEC":{
+          "instructions": "Get started in no time! To recruit your first character, you need {recruitCost} SKILL and .000032 OKT for gas. You will also need a little bit of OKT for gas to cover your first few battles, but don't worry, you will profit with rewards immediately!",
+          "inst1": "1. Getting OKT to your wallet:<a target=_blank href=https://www.youtube.com/watch?v=eMXUYGl7XYg> Watch Video </a>",
+          "inst2": "2. If you have OKT but just need SKILL: <a target=_blank href=https://app.jswap.finance/#/swap?outputCurrency=0xcC137b0713E0DC63b1fA136272014F2A54Dd7aCB> go to JSwap </a>", 
+          "inst3": "3. If you need to bridge NFTs to or from other networks, use our bridge: <a target=_blank href=https://www.youtube.com/watch?v=eNqh7b7hJwE&t=66s> Watch Video </a>",
+          "inst4": "4. That's it! If you have any questions, please join our Discord: <a target=_blank href=https://discord.gg/cryptoblades> Join Discord </a>"
+        },
+        "POLYGON":{
+          "instructions": "Get started in no time! To recruit your first character you need {recruitCost} SKILL and .01 MATIC for gas. You will also need a litle bit of MATIC for gas to cover your first few battles, but don't worry, you will profit with rewards immediately!",
+          "inst1": "1. Trade SKILL between chains: <a target=_blank href=https://bridge.poly.network/token/SKILL> here </a>",
+          "inst2": "2. SWAP SKILL to MATIC: <a target=_blank href=https://app.apeswap.finance/swap> here <a>", 
+          "inst3": "3. If you need to bridge NFTs to or from other networks, use our bridge: <a target=_blank href=https://www.youtube.com/watch?v=eNqh7b7hJwE&t=66s> Watch Video </a>",
+          "inst4": "4. That's it! If you have any questions, please join our Discord: <a target=_blank href=https://discord.gg/cryptoblades> Join Discord </a>"
+        },
+        "AVAX":{
+          "instructions": "Get started in no time! To recruit your first character you need {recruitCost} SKILL and .001 AVAX for gas. You will also need a litle bit of AVAX for gas to cover your first few battles, but don't worry, you will profit with rewards immediately!",
+          "inst1": "1. Trade SKILL between chains: <a target=_blank href=https://bridge.poly.network/token/SKILL> here </a>",
+          "inst2": "2. SWAP SKILL to AVAX: <a target=_blank href=https://app.pangolin.exchange/#/swap> here <a>", 
+          "inst3": "3. If you need to bridge NFTs to or from other networks, use our bridge: <a target=_blank href=https://www.youtube.com/watch?v=eNqh7b7hJwE&t=66s> Watch Video </a>",
+          "inst4": "4. That's it! If you have any questions, please join our Discord: <a target=_blank href=https://discord.gg/cryptoblades> Join Discord </a>"
+        },
         "hideWalletWarning": "You have hidden the wallet warning and it would now be displayed. If you are trying to play, please disable the option and follow the instructions, otherwise close and ignore.",
-        "instructions": "Get started in less than 10 minutes! To recruit your first character you need {recruitCost} SKILL and .001 BNB for gas. You will also need .0015 BNB to do your first few battles, but don't worry, you earn the battle fees back in SKILL rewards immediately!",
-        "inst1": "Buying BNB with fiat:",
-        "inst2": "Once you have BNB, go to ApeSwap to obtain SKILL tokens:",
-        "inst3": "Follow this tutorial to swap BNB for SKILL:",
-        "inst4": "That's it! Now you can create your first character:",
-        "watchVideo": "Watch Video",
-        "watchGettingStartedVideo": "Watch 'Getting Started' Video",
-        "or": "or",
-        "buyWithTransak": "Buy with Transak",
-        "questionDiscord": "If you have any questions, please join our Discord:",
+        "happyEarning": "Happy Earning!",
         "newCharacter": "New character",
         "inGarrison:": "appeared in Garrison"
       }
@@ -753,7 +886,8 @@
   "Treasury": {
     "formulaDetailsTitle": "Claiming Formula Details",
     "partneredProjects": "Partnered Projects",
-    "payoutCurrency": "Payout Currency"
+    "payoutCurrency": "Payout Currency",
+    "payoutFormulaExplanation": "The payout formula is designed to guarantee that rewards will be distributed over an assumed distribution time.\n\nThe multiplier is evenly increasing throughout a day at a speed of 100% per day.\n\nEvery claim lowers the multiplier based on the amount of partner tokens claimed and the desired distribution time.\n\nThat means the multiplier can go below x1 resulting in claiming fewer partner tokens than the claimed SKILL tokens would be worth.\n\nE.g. The supply of partner tokens is 100 tokens. The distribution time is 10 days.\nIn this scenario each partner token (1) claimed will lower the multiplier by 1 / (100 / 10) = 0.1 = 10%\n\nYou can adjust the amount of unclaimed SKILL to use as well as slippage.\n\nSlippage will protect the multiplier applied to your claim.  If a claim before yours lowers the multiplier too much, your transaction will fail instead of claiming."
   },
   "PartneredProject": {
     "multiplier": "Multiplier",
@@ -762,6 +896,7 @@
     "add": "Add",
     "claimed": "Claimed",
     "more": "More",
-    "less": "Less"
+    "less": "Less",
+    "unclaimed": "Unclaimed"
   }
 }
