@@ -281,7 +281,7 @@
           @click="onNftClick(nft.type, nft.id)"
           @contextmenu="canFavorite && toggleFavorite($event, nft.type, nft.id)"
         >
-          <nft-options-dropdown v-if="showNftOptions" :nftType="nft.type" :nftId="nft.id" :options="options" class="nft-options"/>
+          <nft-options-dropdown v-if="showNftOptions" :nftType="nft.type" :nftId="+nft.id" :options="options" :showTransfer="!isMarket" class="nft-options"/>
           <nft-icon :favorite="isFavorite(nft.type, nft.id)" :nft="nft" :isShop="isShop"/>
           <div class="above-wrapper" v-if="$slots.above || $scopedSlots.above">
             <slot name="above" :nft="nft"></slot>
@@ -349,7 +349,6 @@ interface Data {
   showFavoriteNfts: boolean;
   landSaleAllowed: boolean;
   canPurchaseLand: boolean;
-  canPurchaseShield: boolean;
   purchase: Land | undefined;
   selectedTier: number;
   selectedCurrency: number;
@@ -372,7 +371,6 @@ interface Data {
   checkIfCanPurchaseLandInterval: ReturnType<typeof setInterval> | null;
   checkOwnedLandsInterval: ReturnType<typeof setInterval> | null;
   checkPlayerReservedLandInterval: ReturnType<typeof setInterval> | null;
-  fetchNftsInterval: ReturnType<typeof setInterval> | null;
   t1LandPrice: string;
   t2LandPrice: string;
   t3LandPrice: string;
@@ -439,7 +437,6 @@ interface StoreMappedActions {
   claimPlayerReservedLand(payload: {reservationId: number, chunkId: number, tier: number}): Promise<void>;
   getOwnedLands(): Promise<{ 0: string, 1: string, 2: string, 3: string, 4: string }[]>;
   getTakenT3Chunks(): Promise<number[]>;
-  isShieldPurchased(): Promise<boolean>;
 }
 
 export default Vue.extend({
@@ -534,6 +531,9 @@ export default Vue.extend({
         return ['', 'Shield', 'Trinket', 'Junk', 'Keybox', 'Land'];
       },
     },
+    chosenStarsOption: {
+      type: [String, Number],
+    },
   },
 
   data() {
@@ -547,7 +547,6 @@ export default Vue.extend({
       showFavoriteNfts: true,
       landSaleAllowed: false,
       canPurchaseLand: false,
-      canPurchaseShield: true,
       purchase: undefined,
       selectedTier: 0,
       selectedCurrency: 0,
@@ -570,7 +569,6 @@ export default Vue.extend({
       checkIfCanPurchaseLandInterval: null,
       checkOwnedLandsInterval: null,
       checkPlayerReservedLandInterval: null,
-      fetchNftsInterval: null,
       t1LandPrice: '',
       t2LandPrice: '',
       t3LandPrice: '',
@@ -758,7 +756,7 @@ export default Vue.extend({
       'purchaseWeaponCosmetic', 'purchaseCharacterCosmetic', 'getAllZonesPopulation', 'checkIfChunkAvailable',
       'getZoneChunkPopulation', 'getChunkPopulation', 'purchaseT1CBKLand', 'purchaseT2CBKLand', 'purchaseT3CBKLand', 'getCBKLandPrice',
       'getPurchase', 'getReservedChunksIds', 'getAvailableLand', 'fetchIsLandSaleAllowed', 'getPlayerReservedLand',
-      'getChunksOfReservation', 'claimPlayerReservedLand', 'getOwnedLands', 'getTakenT3Chunks', 'isShieldPurchased',
+      'getChunksOfReservation', 'claimPlayerReservedLand', 'getOwnedLands', 'getTakenT3Chunks',
     ]) as StoreMappedActions),
     ...mapMutations(['setCurrentNft']),
 
@@ -841,10 +839,6 @@ export default Vue.extend({
         this.purchase = purchase;
         this.canPurchaseLand = purchase.tier === '0';
       }
-    },
-
-    async checkIfCanPurchaseShield() {
-      this.canPurchaseShield = !await this.isShieldPurchased();
     },
 
     isFavorite(type: string, id: number): boolean {
@@ -964,12 +958,6 @@ export default Vue.extend({
       await this.updateTrinketIds();
       await this.updateJunkIds();
       await this.updateKeyLootboxIds();
-
-      this.fetchNftsInterval = setInterval(async () => {
-        await this.updateTrinketIds();
-        await this.updateJunkIds();
-        await this.updateKeyLootboxIds();
-      }, 3000);
     },
 
     async refreshLandPrices() {
@@ -1077,8 +1065,8 @@ export default Vue.extend({
     },
 
     buyButtonDisabled(type: string) {
-      if(type === 'shield') {
-        return !this.canPurchaseShield;
+      if (type === 'shield') {
+        return false;
       }
       if((type === 't1land' || type === 't2land' || type === 't3land' ) && !this.canPurchaseLand){
         return true;
@@ -1095,7 +1083,6 @@ export default Vue.extend({
     async buyItem(item: nftItem) {
       if(item.type === 'shield'){
         await this.purchaseShield();
-        await this.checkIfCanPurchaseShield();
       }
 
       if(item.type === 'CharacterRenameTag'){
@@ -1180,6 +1167,8 @@ export default Vue.extend({
       this.starFilter = sessionStorage.getItem('market-nft-starfilter') || '';
       this.elementFilter = sessionStorage.getItem('market-nft-elementfilter') || '';
       this.priceSort = sessionStorage.getItem('market-nft-price-order') || '';
+    } else if (this.chosenStarsOption !== undefined) {
+      this.starFilter = this.chosenStarsOption;
     } else {
       this.typeFilter = sessionStorage.getItem('nft-typefilter') || '';
       this.starFilter = sessionStorage.getItem('nft-starfilter') || '';
@@ -1217,8 +1206,6 @@ export default Vue.extend({
 
     await this.fetchReservations();
     this.checkPlayerReservedLandInterval = setInterval(await this.fetchReservations, 3000);
-
-    await this.checkIfCanPurchaseShield();
   },
 
   beforeDestroy() {
@@ -1230,9 +1217,6 @@ export default Vue.extend({
     }
     if(this.checkOwnedLandsInterval){
       clearInterval(this.checkOwnedLandsInterval);
-    }
-    if(this.fetchNftsInterval) {
-      clearInterval(this.fetchNftsInterval);
     }
   }
 });

@@ -1,20 +1,31 @@
 <template>
   <div class="app">
-    <nav-bar />
-    <character-bar v-if="!featureFlagStakeOnly && currentCharacterId !== null" />
+    <nav-bar :isToggled="toggleSideBar"/>
     <div class="content dark-bg-text">
-      <router-view v-if="canShowApp" />
+      <b-row>
+        <character-bar :isToggled="toggleSideBar" v-if="!featureFlagStakeOnly && currentCharacterId !== null"/>
+        <b-col :class="renderPageDisplay()">
+          <router-view v-if="canShowApp" />
+        </b-col>
+        <WeaponRowGrid v-if="showWeapon" v-model.lazy="currentWeaponId" :checkForDurability="true"/>
+      </b-row>
     </div>
     <div class="content dark-bg-text" v-if="!canShowApp">
       {{$t('app.cantView')}}
     </div>
     <div class="fullscreen-warning" v-if="!hideWalletWarning && (showMetamaskWarning || showNetworkError)">
       <div class="starter-panel">
+        <div class="tob-bg-img promotion-decoration">
+          <img class="vertical-decoration bottom" src="./assets/border-element.png">
+        </div>
         <span class="starter-panel-heading">{{ $t('app.warning.title') }}</span>
         <div class="center">
-          <big-button class="button" :mainText="$t('app.warning.buttons.addMetamask')" @click="startOnboarding" v-if="showMetamaskWarning" />
-          <big-button class="button" :mainText="$t('app.warning.buttons.network')" @click="configureMetamask" v-if="showNetworkError" />
-          <small-button class="button" @click="toggleHideWalletWarning" :text="$t('app.buttons.hide')" />
+          <big-button class="button common-width-button"
+          :mainText="$t('app.warning.buttons.addMetamask')" @click="startOnboarding" v-if="showMetamaskWarning" />
+          <big-button class="button common-width-button"
+          :mainText="$t('app.warning.buttons.network')" @click="configureMetamask" v-if="showNetworkError" />
+          <big-button class="button common-width-button"
+          :mainText="$t('app.warning.buttons.hide')" @click="toggleHideWalletWarning" />
         </div>
       </div>
     </div>
@@ -55,13 +66,17 @@
         <div class="seperator"></div>
         <small-button class="button mm-button" @click="toggleHideWalletWarning" :text="$t('app.warning.buttons.hide')" />
       </div>
-      <div class="ad-container">
-        <Adsense v-if="showAds && !isMobile()"
-          data-ad-client="ca-pub-6717992096530538"
-          data-ad-slot="5115599573"
-          data-ad-format="auto"
-          data-full-width-responsive="yes"
-          />
+      <div v-if="showAds && !isMobile()" class="ad-container">
+      <script2 src="https://coinzillatag.com/lib/display.js"></script2>
+        <div class="coinzilla" data-zone="C-541621de2f7bb717603"></div>
+          <script2>
+                window.coinzilla_display = window.coinzilla_display || [];
+                var c_display_preferences = {};
+                c_display_preferences.zone = "541621de2f7bb717603";
+                c_display_preferences.width = "728";
+                c_display_preferences.height = "90";
+                coinzilla_display.push(c_display_preferences);
+          </script2>
       </div>
     </div>
   </div>
@@ -79,6 +94,7 @@ import BigButton from './components/BigButton.vue';
 import SmallButton from './components/SmallButton.vue';
 import NavBar from './components/NavBar.vue';
 import CharacterBar from './components/CharacterBar.vue';
+import WeaponRowGrid from './components/smart/WeaponRowGrid.vue';
 import { apiUrl } from './utils/common';
 import i18n from './i18n';
 import { getConfigValue } from './contracts';
@@ -97,6 +113,7 @@ export default {
     CharacterBar,
     BigButton,
     SmallButton,
+    WeaponRowGrid
   },
 
   data: () => ({
@@ -106,6 +123,10 @@ export default {
     isConnecting: false,
     recruitCost: '',
     isOptions: false,
+    showWeapon: false,
+    currentWeaponId: null,
+    weaponId: null,
+    toggleSideBar: false
   }),
 
   computed: {
@@ -201,12 +222,29 @@ export default {
       }
     },
 
+    renderPageDisplay(){
+      let toDisplay;
+
+      if(!this.featureFlagStakeOnly && this.currentCharacterId !== null){
+        if(this.toggleSideBar){
+          toDisplay = 'can-show-app';
+        }else{
+          toDisplay = 'col-xl-9 col-lg-8 col-md-8 col-sm-10 cols-11 set-normal';
+        }
+      }else{
+        toDisplay = 'col-xl-12 col-lg-12 col-md-12 col-sm-12 cols-12 set-normal';
+      }
+
+      return toDisplay;
+    },
+
     checkStorage() {
       this.hideWalletWarning = localStorage.getItem('hideWalletWarning') === 'true';
-      this.showAds =  localStorage.getItem('show-ads') === 'true';
+      if (process.env.NODE_ENV === 'development') this.showAds = false;
+      else this.showAds = localStorage.getItem('show-ads') === 'true';
     },
     async initializeRecruitCost() {
-      const recruitCost = await this.contracts.CryptoBlades.methods.mintCharacterFee().call({ from: this.defaultAccount });
+      const recruitCost = await this.contracts.CryptoBlades.methods.getMintCharacterFee().call({ from: this.defaultAccount });
       const skillRecruitCost = await this.contracts.CryptoBlades.methods.usdToSkill(recruitCost).call();
       this.recruitCost = BN(skillRecruitCost)
         .div(BN(10).pow(18))
@@ -312,6 +350,17 @@ export default {
     //     },
     //   );
     // });
+    Events.$on('weapon-inventory', (bol) =>{
+      this.showWeapon = bol;
+    });
+
+    Events.$on('chooseweapon', (id) =>{
+      this.weaponId = id;
+    });
+
+    Events.$on('toggle-sideBar', (bol) =>{
+      this.toggleSideBar = bol;
+    });
 
     document.body.addEventListener('click', (e) => {
       const tagname = e.target.getAttribute('tagname');
@@ -351,7 +400,7 @@ export default {
       throw e;
     }
 
-    this.pollCharactersStaminaIntervalId = setInterval(async () => {
+    this.pollCharacterStaminaIntervalId = setInterval(async () => {
       this.ownCharacters.forEach(async (c) => {
         await this.updateCharacterStamina(c.id);
       });
@@ -409,10 +458,35 @@ export default {
 </script>
 
 <style>
+
+@font-face {
+    font-family: 'Trajan';
+    src: url('./assets/fonts/Trajan.ttf');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400;500;600;700&display=swap');
+
+
 button.btn.button.main-font.dark-bg-text.encounter-button.btn-styled.btn-primary > h1 {
   font-weight: 600;
   text-align: center;
 }
+
+.app{
+  width: auto;
+}
+
+
+.set-normal{
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+  transition: 1s all;
+}
+
 
 hr.hr-divider {
   border-top: 1px solid #9e8a57;
@@ -420,7 +494,7 @@ hr.hr-divider {
 }
 body {
   margin: 0;
-  background: linear-gradient(45deg, rgba(20, 20, 20, 1) 100%, rgba(36, 39, 32, 1) 100%);
+  background: linear-gradient(45deg, rgba(20, 20, 20, 1) 100%, #242720 100%);
 }
 
 .no-margin {
@@ -450,7 +524,12 @@ body {
 }
 
 .body {
-  max-height: calc(100vh - 56px - 160px);
+  padding-top: 15px 35px;
+  /* max-height: calc(100vh - 56px - 160px); */
+}
+
+.body  > div{
+  padding-left: 20px;
 }
 
 button,
@@ -500,10 +579,9 @@ button,
   color: grey;
 }
 
-.fire-icon,
-.str-icon {
+.fire-icon,.str-icon {
   color: red;
-  content: url('assets/elements/fire.png');
+  content: url('assets/elements/icon-fire.png');
   width: 1em;
   height: 1em;
 }
@@ -511,7 +589,7 @@ button,
 .earth-icon,
 .dex-icon {
   color: green;
-  content: url('assets/elements/earth.png');
+  content: url('assets/elements/icon-earth.png');
   width: 1em;
   height: 1em;
 }
@@ -519,7 +597,7 @@ button,
 .water-icon,
 .int-icon {
   color: cyan;
-  content: url('assets/elements/water.png');
+  content: url('assets/elements/icon-water.png');
   width: 1em;
   height: 1em;
 }
@@ -527,7 +605,7 @@ button,
 .lightning-icon,
 .cha-icon {
   color: yellow;
-  content: url('assets/elements/lightning.png');
+  content: url('assets/elements/icon-thunder.png');
   width: 1em;
   height: 1em;
 }
@@ -559,6 +637,11 @@ button.close {
 .btn {
   border: 2px solid #6c5f38 !important;
   border-radius: 0.1em !important;
+}
+
+.common-width-button {
+  margin: 0.8rem;
+  width: 22%;
 }
 
 .btn.disabled,
@@ -702,6 +785,7 @@ div.bg-success {
 .starter-panel-heading {
   margin-left: 15px;
   font-size: clamp(18px, 2vw, 45px);
+  color: #9e8a57;
 }
 
 .starter-msg {
@@ -728,6 +812,10 @@ div.bg-success {
   margin: 5px;
 }
 
+.vertical-decoration {
+  width: 50%;
+}
+
 .center {
   display: flex;
   justify-content: center;
@@ -738,11 +826,36 @@ div.bg-success {
   border: 1px solid #9e8a57;
 }
 
+.bg-image{
+  background: url('./assets/combat-bg.png');
+  background-repeat: no-repeat;
+  background-size:cover;
+  border-radius:0px;
+}
+
+
+.can-show-app{
+  width: 100%;
+  padding-top: 40px;
+}
+
+
+
+@media all and (max-width: 600px) {
+  .can-show-app{
+    overflow-y: hidden ;
+  }
+}
+
 @media all and (max-width: 767.98px) {
   .content {
     padding: 10px;
+    padding-top: 0px;
   }
   .dark-bg-text {
+    width: 100%;
+  }
+  .vertical-decoration {
     width: 100%;
   }
 }
